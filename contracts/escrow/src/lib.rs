@@ -20,8 +20,8 @@ pub enum Error {
     InvalidAmount = 3,
 }
 
-#[contract]
 /// Entry point for the escrow contract.
+#[contract]
 pub struct Contract;
 
 #[contractimpl]
@@ -50,7 +50,8 @@ impl Contract {
         Ok(())
     }
 
-    /// Returns the current configured value.
+    /// Returns the currently stored value, or `0` if the contract has not
+    /// been initialized.
     pub fn get_value(env: Env) -> i128 {
         storage::read_config(&env).map(|c| c.value).unwrap_or(0)
     }

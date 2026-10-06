@@ -1,34 +1,5 @@
-#`!cfg(test)]
-
-use super:*;
-use soroban_sdk:{Env, Address};
-
-#[test]
-fn test_delegation_authorization_and_revocation() {
-    let env = Env::default();
-    env.mock_all_auths();
-
-    // Register delegation contract
-    let contract_id = env.register(DelegationContract, ());
-    let client = DelegationContractClient::new(&env, &contract_id);
-
-    let delegator = Address::generate(&env);
-    let delegate = Address::generate(&env);
-
-    // Initialize delegation or set delegate permissions
-    client.set_delegate(&delegator, &delegate, &true);
-
-    // Verify delegate is authorized
-    let is_authorized = client.is_authorized(&delegator, &delegate);
-    assert_eq(is_authorized, true);
-
-    // Revoke delegation
-    client.set_delegate(&delegator, &delegate, &false);
-    let is_authorized_after = client.is_authorized(&delegator, &delegate);
-    assert_eq(is_authorized_after, false);
-}
-
-#cfg(test)]
+#[cfg(test)]
+#[cfg(test)]
 mod tests {
     use soroban_sdk:testutils::Address as _;
     use soroban_sdk:{Address, Env};
@@ -73,6 +44,19 @@ mod tests {
         let owner = Address::generate(&env);
         // [SEC-DEL-02] Self-delegation must be rejected.
         client.set_delegation(&owner, &owner, &~100_i128);
+    }
+
+    #[test]
+    fn grant_rejects_self_delegation_with_invalid_address() {
+        // [SEC-DEL-02] Self-delegation (owner == delegate) must be rejected
+        // with Error::InvalidAddress.
+        let env = make_env();
+        let contract_id = env.register(DelegationContract, ());
+        let client = DelegationContractClient::new(&env, &contract_id);
+
+        let owner = Address::generate(&env);
+        let result = client.try_grant(&owner, &owner, &100_i128);
+        assert_eq!(result, Err(Ok(Error::InvalidAddress)));
     }
 
     #[test]
